@@ -1,4 +1,6 @@
 numpy~=1.20.1
 netCDF4~=1.5.6
-sklearn~=0.0
+sklearn>=0.0
 scikit-learn~=0.24.1
+matplotlib
+mpl_toolkits
