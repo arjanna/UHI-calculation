@@ -1,21 +1,26 @@
 #!/usr/bin/env python3
 """
-This code is used to calculate of the Urban Heat Island effect as described in doi:XXXX
+This code is used to calculate of the Urban Heat Island effect as described in:
 
-For a proper usage fill the empty case-specific values in the header.
+Valmassoi and Keller (2021), Representing the Urban Heat Island in Gridded Datasets, Advances in Science and Research.
+DOI:
 
-All gridded data read has the spatial coordinate in 1D. If your data comes in a lon-lat grid, flatten it before applying the methods.
+This program is a free software distributed under the terms of the GNU General Public License as published by
+the Free Software Foundation, version 3 (GNU-GPLv3).
 
+You can redistribute and/or modify by citing the mentioned publication, but WITHOUT ANY WARRANTY; without even the
+implied warranty of  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+For a description of the functions uhi1 to uhi7, refer to Valmassoi and Keller (2021).
 """
 import numpy as np
 from sklearn.neighbors import BallTree
 from typing import Union, Tuple
 import sys
 from enum import Enum
-# TODO Unused for the time being
-# from netCDF4 import Dataset
 
+
+# TODO Unused for the time being
 
 class Coords:
     """
@@ -24,6 +29,7 @@ class Coords:
         coords = Coords(5.8, 12.3)
         coords = Coords(lat=5.8, lon=12.3)
     """
+
     def __init__(self, lat: float, lon: float):
         self.lat = lat
         self.lon = lon
@@ -56,22 +62,15 @@ class Bounds:
                               np.logical_and(latitudes > self.min.lat, latitudes < self.max.lat))
 
 
-class UHIMethod(Enum):
-    UHI1 = 1
-    UHI2 = 2
-    UHI3 = 3
-    UHI4 = 4
-    UHI5 = 5
-    UHI6 = 6
-    UHI7 = 7
-
-
 class UHI:
-    # TODO What is Gammazero?
-    GAMMA0 = - 6.5 * 10 ** (-3)
+    GAMMA0 = - 6.5 * 10 ** (-3)  # lapse rate
     URBAN_USE_THRESHOLD_DEFAULT = 0.2
+    URBAN_CORE_THRESHOLD_DEFAULT = 0.5
     TOPO_URBAN_MEAN_SCALING_DEFAULT = (0.8, 1.2)
-
+    URBAN_SEARCH_RADIUS_DEFAULT = 8  # km
+    RURAL_SEARCH_RADIUS_DEFAULT = 10  # km
+    NEAR_NEIGHBOUR_DEFAULT = 5
+    URBAN_SEEDS_DEFAULT = [0,1,2]  # grid point number
     topography = None
 
     """
@@ -94,16 +93,19 @@ class UHI:
     """
     topo_urban_mean = None
 
-
-    def __init__(self, topography, rural_land_use, urban_use, area_extent_index_mask, urban_area_index_mask):
+    def __init__(self, lons, lats, topography, rural_land_use, urban_use, area_extent_index_mask,
+                 urban_area_index_mask):
         """
+        :param lons: 1D
+        :param lats: 1D
         :param topography: 1D
         :param rural_land_use: 1D
         :param urban_use: 1D
         :param area_extent_index_mask: ones in the considered areas, zero otherwise, indexing referred to ''topography''
         :param urban_area_index_mask: ones in the urban area, zero otherwise, indexing referred to ''topography''
         """
-        self._seeds = []
+        self.lons = lons
+        self.lats = lats
         self.topography = topography
         self.rural_land_use = rural_land_use
         self.urban_use = urban_use
@@ -113,13 +115,13 @@ class UHI:
                                                         np.logical_not(urban_area_index_mask)))[0]
         self.topo_urban_mean = np.nanmean(self.topography[np.where(self.topography[self.urban_area_index])[0]])
 
-    def _choose_uhi(self, method: UHIMethod):
-        fn = getattr(self, f'uhi{method.value}', None)
+    def _choose_uhi(self, method):
+        fn = getattr(self, f'uhi{method}', None)
         if fn is None or not callable(fn):
             raise NotImplementedError(f'The method {method} is not known')
         return fn
 
-    def __call__(self, method: UHIMethod, *args, **kwargs):
+    def __call__(self, method, *args, **kwargs):
         return self._choose_uhi(method)(*args, **kwargs)
 
     def uhi1(self, t, baseline):
@@ -128,8 +130,9 @@ class UHI:
 
     def uhi2(self, t, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT):
         ind = np.where(np.logical_and(self.urban_use[self.rural_area_index] < urban_use_threshold,
-                                    self.topography[self.rural_area_index] < self.topo_urban_mean))[0]
+                                      self.topography[self.rural_area_index] < self.topo_urban_mean))[0]
         rural = self.rural_land_use[self.rural_area_index]
+        print(self.rural_area_index)
         index_max_rural = np.nanmax(rural[ind])
         rur_grid_point = rural[ind].tolist().index(index_max_rural)
         baseline = t[self.rural_area_index[rur_grid_point]]
@@ -140,8 +143,6 @@ class UHI:
         ind = np.where(self.urban_use[self.area_extent_index] < urban_use_threshold)[0]
         baseline = np.nanmean(t[self.area_extent_index[ind]])
         print(f'base uhi3 {baseline}')
-        # TODO remove this debug statement
-        print((t - baseline).shape)
         return t - baseline
 
     def uhi4(self, t, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT):
@@ -166,23 +167,24 @@ class UHI:
     def uhi6(self, t, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT):
         ind = np.where(self.urban_use[self.rural_area_index] < urban_use_threshold)[0]
         t_correct = np.asarray([t[i] + self.GAMMA0 * (self.topo_urban_mean - self.topography[i])
-                                for i in np.arange(0,self.topography.shape[0])])
+                                for i in np.arange(0, self.topography.shape[0])])
         baseline = np.nanmean(t_correct[self.rural_area_index[ind]])
         print(f'base uhi6 {baseline}')
         return t_correct - baseline
 
-    def uhi7(self, t, lons, lats, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT):
-        # TODO uhi7 uses 0.5 instead of 0.2
-        # TODO Why does this function use lats and lons? Where are all those constants defined? What each constant means?
-        lolarad = np.deg2rad((lons, lats))
-        urb = self.urban_use > urban_use_threshold
-        urblo = lons[urb]
-        urbla = lats[urb]
+    def uhi7(self, t, seeds=URBAN_SEEDS_DEFAULT, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT,
+             urban_core_threshold=URBAN_CORE_THRESHOLD_DEFAULT, urban_search_radius=URBAN_SEARCH_RADIUS_DEFAULT,
+             rural_search_radius=RURAL_SEARCH_RADIUS_DEFAULT, nn=NEAR_NEIGHBOUR_DEFAULT):
+        lolarad = np.deg2rad((self.lons, self.lats))
+        urb = self.urban_use > urban_core_threshold
+        urblo = self.lons[urb]
+        urbla = self.lats[urb]
         ulolarad = np.deg2rad((urblo, urbla))
         indices = np.zeros((30, ulolarad.shape[1])).astype(int)
         indices[:] = -1
         maxdist = 8  # search radius
-        new_seeds = np.where([x in self._seeds for x in np.where(urb)[0]])
+        new_seeds = np.where([x in seeds for x in np.where(urb)[0]])
+        print(new_seeds)
         indices[0, 0:len(new_seeds[0].tolist())] = new_seeds[0]
         for i in np.arange(0, 25):
             ulolarad_core = ulolarad[:, indices[i, 0:np.sum(indices[i, :] > -1)]]
@@ -193,11 +195,8 @@ class UHI:
             dist, idx = bt.query(lolarad.transpose())
 
         dist = dist[:, 0] * 6371
-        nn = 5
-        minrural = 10  # in km
-        rural_value = .2
-        t_rural = t[:][np.logical_and(self.urban_use[:] < rural_value, dist > minrural)]
-        lolarad_rural = lolarad[:, np.logical_and(self.urban_use[:] < rural_value, dist > minrural)]
+        t_rural = t[:][np.logical_and(self.urban_use[:] < urban_use_threshold, dist > rural_search_radius)]
+        lolarad_rural = lolarad[:, np.logical_and(self.urban_use[:] < urban_use_threshold, dist > rural_search_radius)]
         bt = BallTree(lolarad_rural.transpose())
         rurdist, idx = bt.query(lolarad.transpose(), k=nn)
         rurdist = rurdist * 6371
@@ -219,21 +218,7 @@ class Parameters:
     topography = None  # topography: 1D
     rural_land_use = None  # rural land use: 1D
     urban_land_use = None  # urban use: 1D
-
-    # urban box coordinates: urban core
-    urban_box = Bounds(min_coords=Coords(lat=51.5, lon=5.8), max_coords=Coords(lat=52, lon=6.2))
-
-    # rural box coordinates
-    rural_box = Bounds(min_coords=Coords(lat=51, lon=5), max_coords=Coords(lat=53, lon=7))
-
-    # map limits
-    # TODO This is never used, because RBOX contains UBOX
-    # LIMS = Bounds(min_coords=Coords(lat=50.5, lon=5), max_coords=Coords(lat=54, lon=7.8))
-
-    # select the area within the map limits
-    # TODO This is never used, because RBOX is used as bound
-    # select_area_index = LIMS.get_index_mask(lats, lons)
-
+    temperature = None
     def assert_not_none(self):
         all_defined = True
         for member_name in filter(lambda name: not name.startswith('_'), self.__dict__.keys()):
@@ -243,53 +228,69 @@ class Parameters:
         if not all_defined:
             sys.exit(1)
 
+    def check_if_1D(self):
+        dimension = 1
+        for member_name in filter(lambda name: not name.startswith('_'), self.__dict__.keys()):
+            if getattr(self, member_name).ndim != 1:
+                print(f' All variables should be 1D, here {member_name} has ', getattr(self, member_name).ndim )
+                sys.exit(1)
 
-def _main():
-    # TODO Take this from the arguments using argparse.ArgumentParser
+
+def calc_uhi(method, t, lons, lats, topography, rural_land_use, urban_land_use, min_urb_coord_box,
+             max_urb_coord_box, min_rur_coord_box, max_rur_coord_box, rur_obs=None):
+
     parms = Parameters()
 
-    parms.lons = None  # longitude 1D
-    parms.lats = None  # latitude 1D
-    parms.topography = None  # topography: 1D
-    parms.rural_land_use = None  # rural land use: 1D
-    parms.urban_land_use = None  # urban use: 1D
+    parms.temperature = t  # surface temperature 1D
+    parms.lons = lons  # longitude 1D
+    parms.lats = lats  # latitude 1D
+    parms.topography = topography  # topography: 1D
+    parms.rural_land_use = rural_land_use  # rural land use: 1D
+    parms.urban_land_use = urban_land_use  # urban use: 1D
+    parms.check_if_1D()
+
+    # urban box coordinates: urban core
+    parms.urban_box = Bounds(min_coords=Coords(lat=min_urb_coord_box[0], lon=min_urb_coord_box[1]),
+                             max_coords=Coords(lat=max_urb_coord_box[0], lon=max_urb_coord_box[1]))
+
+    # rural box coordinates
+    parms.rural_box = Bounds(min_coords=Coords(lat=min_rur_coord_box[0], lon=min_rur_coord_box[1]),
+                             max_coords=Coords(lat=max_rur_coord_box[0], lon=max_rur_coord_box[1]))
 
     # This will fail the script if they're undefined
     parms.assert_not_none()
-    uhi = UHI(topography=parms.topography,
+    uhi = UHI(lons=parms.lons, lats=parms.lats,
+              topography=parms.topography,
               rural_land_use=parms.rural_land_use,
               urban_use=parms.urban_land_use,
               area_extent_index_mask=parms.rural_box.get_index_mask(parms.lats, parms.lons),
               urban_area_index_mask=parms.urban_box.get_index_mask(parms.lats, parms.lons))
 
-    # TODO: What to do with UHI
-    # print(uhi(UHIMethod.UHI1, temperature, rur_obs))
-    # print(uhi(UHIMethod.UHI5, temperature))
+    if method == 1:
+        uhi_all = uhi(method, parms.temperature, rur_obs)
+    else:
+        uhi_all = uhi(method, parms.temperature)
+    return uhi_all
 
 
-if __name__ == '__main__':
-    _main()
-
-
-# TODO This plot is never invoked
-# plt.scatter(lons[self.rural_area_index[ind]], lats[self.rural_area_index[ind]])
-# plt.show()
-# read here the station data:
-
-# read here the fields:
-# TODO This is never used
-# inp = '' # netcdf input file with the temperature fields
-# TODO This is never used
-# datafile = Dataset(inp)
-# TODO This is never used
-# invarfile = Dataset("") # input file with the invariant data
-
-# e.g UHI1
-# TODO Make this a unit test, do not define variables just for testing
-# rur_obs = # rural observation from the weather station
-# uhi_m1 = uhi1(temperature, rur_obs)
-
-#e.g. UHI5
-# TODO Make this a unit test, do not define variables just for testing
-# temperature = # surface temperature 1D
-# uhi_m5 = uhi5(temperature)
+def quick_uhi_plot(uhi,  lons, lats, map_limits_min, map_limits_max, levs=np.arange(-3.25, 3.75, .5)):
+    import matplotlib.pylab as plt
+    import os
+    # if needed add os.environ["PROJ_LIB"] = "[..]/share/proj"
+    from mpl_toolkits.basemap import Basemap
+    LIMS = Bounds(min_coords=Coords(lat=map_limits_min[0], lon=map_limits_min[1]),
+                  max_coords=Coords(lat=map_limits_max[0], lon=map_limits_max[1]))
+    par = np.arange(int(LIMS.min.lat)-1, int(LIMS.max.lat)+1, .5)
+    mer = np.arange(int(LIMS.min.lon)-1, int(LIMS.max.lon)+1, .5)
+    latc = (int(LIMS.max.lat) + int(LIMS.min.lat))/2
+    lonc = (int(LIMS.max.lat) + int(LIMS.min.lat))/2
+    fig, ax = plt.subplots(figsize=(10, 10))
+    m = Basemap(llcrnrlon=LIMS.min.lon, llcrnrlat=LIMS.min.lat, urcrnrlon=LIMS.max.lon, urcrnrlat=LIMS.max.lat,
+                lat_0=latc, lon_0=lonc,
+                projection='cyl', resolution='c')
+    m.drawparallels(par, labels=[1, 0, 0, 0], linewidth=0.0)
+    m.drawmeridians(mer, labels=[0, 0, 0, 1], linewidth=0.0)
+    print(np.nanmean(uhi))
+    cb = m.contourf(lons, lats, uhi, levs, cmap=plt.cm.jet, tri=True, extend='both', alpha=.8)
+    plt.colorbar(cb)
+    plt.show()
