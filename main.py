@@ -58,3 +58,4 @@ for i in np.arange(0, uhi.shape[0]):
 map_limits_min = [50.5, 5]
 map_limits_max = [54, 7.8]
 quick_uhi_plot(uhi_m7, lons, lats, map_limits_min, map_limits_max)
+
