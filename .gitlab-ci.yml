@@ -20,5 +20,4 @@ test-job2:
 deploy-prod:
   stage: deploy
   script:
-    - if: '$CI_PIPELINE_SOURCE == "push"'
     - echo "commit to $CI_COMMIT_BRANCH branch."
