@@ -49,19 +49,27 @@ dist, ind = ball_tree.query(np.asarray([np.deg2rad(cities[1]),np.deg2rad(cities[
 if dist[0,0]*6371<2:
    seed.append(ind[0][0])
 
+expected_results=[28,17.725006,22.594656677614523,22.522282708276492,23.77341671540881,22.531531851805937,22.5808251123205]
 
-expected_results=[28,17.732819,2]
-
-add_input = None
-for method in np.arange(1,4):
-    print(method)
+correct_runs = []
+for method in np.arange(1,8):
     if method==1:
        add_input = 28.
-    if method==7:
-       add_input = seed
-    uhi,base = calc_uhi(method, temperature, lons, lats, topography, rural_land_use, urban_land_use, min_urb_coord_box, max_urb_coord_box, min_rur_coord_box, max_rur_coord_box,add_input)
+       uhi,base = calc_uhi(method, temperature, lons, lats, topography, rural_land_use, urban_land_use, min_urb_coord_box, max_urb_coord_box, min_rur_coord_box, max_rur_coord_box,add_input)
+    else: 
+        if method==7:
+          add_input = seed
+          uhi, tbase, base = calc_uhi(method, temperature, lons, lats, topography, rural_land_use, urban_land_use, min_urb_coord_box, max_urb_coord_box, min_rur_coord_box, max_rur_coord_box,add_input)
+        else: 
+          uhi, base = calc_uhi(method, temperature, lons, lats, topography, rural_land_use, urban_land_use, min_urb_coord_box, max_urb_coord_box, min_rur_coord_box, max_rur_coord_box)
     if base!=expected_results[method-1] :
-         raise ValueError("Wrong value obtained")
+        correct_runs.append(False)
+    else:
+        correct_runs.append(True)
+
+if np.sum(correct_runs)!=len(correct_runs):
+    raise ValueError("Wrong value obtained for method(s) number: "+str(int(np.where(np.logical_not(correct_runs))[0])+1))
+
 
 
 

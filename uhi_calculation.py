@@ -113,8 +113,7 @@ class UHI:
         self.urban_area_index = np.where(urban_area_index_mask)[0]
         self.rural_area_index = np.where(np.logical_and(area_extent_index_mask,
                                                         np.logical_not(urban_area_index_mask)))[0]
-        self.topo_urban_mean = np.nanmean(self.topography[np.where(self.topography[self.urban_area_index])[0]])
-
+        self.topo_urban_mean = np.nanmean(self.topography[self.urban_area_index])
     def _choose_uhi(self, method):
         fn = getattr(self, f'uhi{method}', None)
         if fn is None or not callable(fn):
@@ -148,7 +147,7 @@ class UHI:
         ind = np.where(self.urban_use[self.rural_area_index] < urban_use_threshold)[0]
         baseline = np.nanmean(t[self.rural_area_index[ind]])
         print(f'base uhi4 {baseline}')
-        return t - baseline
+        return t - baseline, baseline
 
     def uhi5(self, t, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT,
              topo_urban_mean_scaling=TOPO_URBAN_MEAN_SCALING_DEFAULT):
@@ -183,7 +182,6 @@ class UHI:
         indices[:] = -1
         maxdist = 8  # search radius
         new_seeds = np.where([x in seeds for x in np.where(urb)[0]])
-        print(new_seeds)
         indices[0, 0:len(new_seeds[0].tolist())] = new_seeds[0]
         for i in np.arange(0, 25):
             ulolarad_core = ulolarad[:, indices[i, 0:np.sum(indices[i, :] > -1)]]
@@ -208,7 +206,7 @@ class UHI:
         baseline = np.mean(tbase[self.rural_area_index])
         print(f'base uhi7 {baseline}')
         uhi = t - tbase
-        return uhi, baseline, tbase
+        return uhi, tbase, baseline
 
 
 class Parameters:
