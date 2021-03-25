@@ -18,7 +18,6 @@ For a description of the UHI methods, refer to Valmassoi and Keller (2021).
 from uhi_calculation import calc_uhi, quick_uhi_plot
 import numpy as np
 import pandas as pd
-import geopandas as gpd
 import sys
 inp_file='dataset_test.csv'
 
@@ -42,9 +41,8 @@ max_rur_coord_box = [53, 7]
 from sklearn.neighbors import BallTree
 
 ulolarad=np.deg2rad((lons,lats))
-cities = [50.936860, 6.951152]
+cities = [50.936860, 6.951152] #'Cologne'
 ball_tree = BallTree(ulolarad.T, leaf_size=2)
-city='Cologne'
 seed = []
 
 dist, ind = ball_tree.query(np.asarray([np.deg2rad(cities[1]),np.deg2rad(cities[0])]).reshape(1, -1),k=1) # nearest neighbor for the city center
