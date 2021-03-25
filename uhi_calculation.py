@@ -126,7 +126,7 @@ class UHI:
 
     def uhi1(self, t, baseline):
         print(f'base uhi1 {baseline}')
-        return t - baseline
+        return t - baseline, baseline
 
     def uhi2(self, t, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT):
         ind = np.where(np.logical_and(self.urban_use[self.rural_area_index] < urban_use_threshold,
@@ -136,13 +136,13 @@ class UHI:
         rur_grid_point = rural[ind].tolist().index(index_max_rural)
         baseline = t[self.rural_area_index[rur_grid_point]]
         print(f'base uhi2 {baseline}')
-        return t - baseline
-
+        return t - baseline, baseline
+ 
     def uhi3(self, t, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT):
         ind = np.where(self.urban_use[self.area_extent_index] < urban_use_threshold)[0]
         baseline = np.nanmean(t[self.area_extent_index[ind]])
         print(f'base uhi3 {baseline}')
-        return t - baseline
+        return t - baseline, baseline
 
     def uhi4(self, t, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT):
         ind = np.where(self.urban_use[self.rural_area_index] < urban_use_threshold)[0]
@@ -161,7 +161,7 @@ class UHI:
         ))[0]
         baseline = np.nanmean(t[self.rural_area_index[ind]])
         print(f'base uhi5 {baseline}')
-        return t - baseline
+        return t - baseline, baseline
 
     def uhi6(self, t, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT):
         ind = np.where(self.urban_use[self.rural_area_index] < urban_use_threshold)[0]
@@ -169,7 +169,7 @@ class UHI:
                                 for i in np.arange(0, self.topography.shape[0])])
         baseline = np.nanmean(t_correct[self.rural_area_index[ind]])
         print(f'base uhi6 {baseline}')
-        return t_correct - baseline
+        return t_correct - baseline, baseline
 
     def uhi7(self, t, seeds, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT,
              urban_core_threshold=URBAN_CORE_THRESHOLD_DEFAULT, urban_search_radius=URBAN_SEARCH_RADIUS_DEFAULT,
@@ -208,7 +208,7 @@ class UHI:
         baseline = np.mean(tbase[self.rural_area_index])
         print(f'base uhi7 {baseline}')
         uhi = t - tbase
-        return uhi, tbase
+        return uhi, baseline, tbase
 
 
 class Parameters:

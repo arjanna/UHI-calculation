@@ -1,27 +1,14 @@
+image: "python:3.7"
+
 before_script:
-  - apt-get -qq install -y python python-virtualenv python-pip
-  - virtualenv venv
-  - . venv/bin/activate
-  - python3 -V
-  - pip install requirements.txt
-build-job:
-  stage: build
-  script:
-    - echo " installed requirements.txt"
+  - python --version
+  - pip install -r requirements.txt
 
 test-job1:
   stage: test
   script:
-    - VAL=$(python3 test_main.py dataset_test.csv)
-    - if (( $VAL != 17.732819 )); then; echo "error different value!"; exit 1; fi
+    - python3 test_main.py
 
-test-job2:
-  stage: test
-  script:
-    - echo "This job tests something, but takes more time than test-job1."
-    - echo "After the echo commands complete, it runs the sleep command for 20 seconds"
-    - echo "which simulates a test that runs 20 seconds longer than test-job1"
-    - sleep 2
 
 deploy-prod:
   stage: deploy
