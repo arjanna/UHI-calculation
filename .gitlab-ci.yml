@@ -1,7 +1,7 @@
 build-job:
   stage: build
   script:
-    - echo "Hello, $GITLAB_USER_LOGIN!"
+    - python3 pip -m install requirements.txt
 
 test-job1:
   stage: test
