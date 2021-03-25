@@ -132,7 +132,6 @@ class UHI:
         ind = np.where(np.logical_and(self.urban_use[self.rural_area_index] < urban_use_threshold,
                                       self.topography[self.rural_area_index] < self.topo_urban_mean))[0]
         rural = self.rural_land_use[self.rural_area_index]
-        print(self.rural_area_index)
         index_max_rural = np.nanmax(rural[ind])
         rur_grid_point = rural[ind].tolist().index(index_max_rural)
         baseline = t[self.rural_area_index[rur_grid_point]]
