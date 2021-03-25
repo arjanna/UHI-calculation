@@ -1,7 +1,7 @@
 build-job:
   stage: build
   script:
-    - python3 pip -m install requirements.txt
+    - python3 -m pip install requirements.txt
 
 test-job1:
   stage: test
