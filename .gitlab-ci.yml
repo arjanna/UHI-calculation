@@ -1,7 +1,13 @@
+before_script:
+  - apt-get -qq install -y python python3-virtualenv python3-pip
+  - virtualenv venv
+  - . venv/bin/activate
+  - python3 -V
+  - pip install requirements.txt
 build-job:
   stage: build
   script:
-    - pip install requirements.txt
+    - echo " installed requirements.txt"
 
 test-job1:
   stage: test
