@@ -1,0 +1,24 @@
+build-job:
+  stage: build
+  script:
+    - echo "Hello, $GITLAB_USER_LOGIN!"
+
+test-job1:
+  stage: test
+  script:
+    - VAL=$(python3 test_main.py dataset_test.csv)
+    - if (( $VAL != 17.732819 )); then; echo "error different value!"; exit 1; fi
+
+test-job2:
+  stage: test
+  script:
+    - echo "This job tests something, but takes more time than test-job1."
+    - echo "After the echo commands complete, it runs the sleep command for 20 seconds"
+    - echo "which simulates a test that runs 20 seconds longer than test-job1"
+    - sleep 2
+
+deploy-prod:
+  stage: deploy
+  script:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+    - echo "commit to $CI_COMMIT_BRANCH branch."
