@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 
-df = pd.read_csv('dataset.csv')
+df = pd.read_csv('dataset2.csv')
 
 lons = df.lons.values  # longitude (degrees) 1D
 lats = df.lats.values  # latitude (degrees) 1D
@@ -36,14 +36,28 @@ min_rur_coord_box = [51, 5]
 max_rur_coord_box = [53, 7]
 
 
-seed = [2315,2316,2317]
+## find the seed from the city center coordinates
+from sklearn.neighbors import BallTree
+ulolarad=np.deg2rad((lons,lats))
+cities = [50.936860, 6.951152]
+ball_tree = BallTree(ulolarad.T, leaf_size=2)
+city='Cologne'
+seed = []
+
+dist, ind = ball_tree.query(np.asarray([np.deg2rad(cities[1]),np.deg2rad(cities[0])]).reshape(1, -1),k=1) # nearest neighbor for the city center
+if dist[0,0]*6371<2:
+   seed.append(ind[0][0])
+
+
 # example 1: UHI field with M7
 method = 7 # method number
-uhi_m7 = calc_uhi(method, temperature, lons, lats, topography, rural_land_use, urban_land_use, min_urb_coord_box, max_urb_coord_box, min_rur_coord_box, max_rur_coord_box,seed)
+uhi_m7, baseline_temperature = calc_uhi(method, temperature, lons, lats, topography, rural_land_use, urban_land_use, min_urb_coord_box, max_urb_coord_box, min_rur_coord_box, max_rur_coord_box,seed)
+
 
 # quick plotting routine to check the results
 # coordinate limits
-map_limits_min = [50.5, 5]
-map_limits_max = [54, 7.8]
+map_limits_min = [min(lats), min(lons)]
+map_limits_max = [max(lats), max(lons)]
 quick_uhi_plot(uhi_m7, lons, lats, map_limits_min, map_limits_max)
+
 

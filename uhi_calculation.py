@@ -206,14 +206,10 @@ class UHI:
             tbase = np.sum(t_rural[idx] * weights, axis=1)
         else:
             tbase = t_rural[idx[:, 0]]
-        
-        map_limits_min = [50.5, 5]
-        map_limits_max = [54, 7.8]
-        quick_uhi_plot(tbase, self.lons, self.lats, map_limits_min, map_limits_max,np.arange(5,30))
         baseline = np.mean(tbase[self.rural_area_index])
         print(f'base uhi7 {baseline}')
-        uhi = t - baseline
-        return uhi
+        uhi = t - tbase
+        return uhi, tbase
 
 
 class Parameters:
@@ -294,7 +290,6 @@ def quick_uhi_plot(uhi,  lons, lats, map_limits_min, map_limits_max, levs=np.ara
                 projection='cyl', resolution='c')
     m.drawparallels(par, labels=[1, 0, 0, 0], linewidth=0.0)
     m.drawmeridians(mer, labels=[0, 0, 0, 1], linewidth=0.0)
-    print(np.nanmean(uhi))
     cb = m.contourf(lons, lats, uhi, levs, cmap=plt.cm.bwr, tri=True, extend='both', alpha=.8)
     plt.colorbar(cb)
     plt.show()
