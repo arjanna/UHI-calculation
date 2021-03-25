@@ -1,5 +1,5 @@
 before_script:
-  - apt-get -qq install -y python python3-virtualenv python3-pip
+  - apt-get -qq install -y python python-virtualenv python-pip
   - virtualenv venv
   - . venv/bin/activate
   - python3 -V
