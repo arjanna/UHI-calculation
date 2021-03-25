@@ -70,7 +70,7 @@ class UHI:
     URBAN_SEARCH_RADIUS_DEFAULT = 8  # km
     RURAL_SEARCH_RADIUS_DEFAULT = 10  # km
     NEAR_NEIGHBOUR_DEFAULT = 5
-    URBAN_SEEDS_DEFAULT = [0,1,2]  # grid point number
+    #URBAN_SEEDS_DEFAULT = [0,1,2]  # grid point number
     topography = None
 
     """
@@ -172,7 +172,7 @@ class UHI:
         print(f'base uhi6 {baseline}')
         return t_correct - baseline
 
-    def uhi7(self, t, seeds=URBAN_SEEDS_DEFAULT, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT,
+    def uhi7(self, t, seeds, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT,
              urban_core_threshold=URBAN_CORE_THRESHOLD_DEFAULT, urban_search_radius=URBAN_SEARCH_RADIUS_DEFAULT,
              rural_search_radius=RURAL_SEARCH_RADIUS_DEFAULT, nn=NEAR_NEIGHBOUR_DEFAULT):
         lolarad = np.deg2rad((self.lons, self.lats))
@@ -206,6 +206,10 @@ class UHI:
             tbase = np.sum(t_rural[idx] * weights, axis=1)
         else:
             tbase = t_rural[idx[:, 0]]
+        
+        map_limits_min = [50.5, 5]
+        map_limits_max = [54, 7.8]
+        quick_uhi_plot(tbase, self.lons, self.lats, map_limits_min, map_limits_max,np.arange(5,30))
         baseline = np.mean(tbase[self.rural_area_index])
         print(f'base uhi7 {baseline}')
         uhi = t - baseline
@@ -237,7 +241,7 @@ class Parameters:
 
 
 def calc_uhi(method, t, lons, lats, topography, rural_land_use, urban_land_use, min_urb_coord_box,
-             max_urb_coord_box, min_rur_coord_box, max_rur_coord_box, rur_obs=None):
+             max_urb_coord_box, min_rur_coord_box, max_rur_coord_box, additional_info=None):
 
     parms = Parameters()
 
@@ -266,8 +270,8 @@ def calc_uhi(method, t, lons, lats, topography, rural_land_use, urban_land_use, 
               area_extent_index_mask=parms.rural_box.get_index_mask(parms.lats, parms.lons),
               urban_area_index_mask=parms.urban_box.get_index_mask(parms.lats, parms.lons))
 
-    if method == 1:
-        uhi_all = uhi(method, parms.temperature, rur_obs)
+    if (method == 1 or method == 7):
+        uhi_all = uhi(method, parms.temperature, additional_info)
     else:
         uhi_all = uhi(method, parms.temperature)
     return uhi_all
@@ -291,6 +295,6 @@ def quick_uhi_plot(uhi,  lons, lats, map_limits_min, map_limits_max, levs=np.ara
     m.drawparallels(par, labels=[1, 0, 0, 0], linewidth=0.0)
     m.drawmeridians(mer, labels=[0, 0, 0, 1], linewidth=0.0)
     print(np.nanmean(uhi))
-    cb = m.contourf(lons, lats, uhi, levs, cmap=plt.cm.jet, tri=True, extend='both', alpha=.8)
+    cb = m.contourf(lons, lats, uhi, levs, cmap=plt.cm.bwr, tri=True, extend='both', alpha=.8)
     plt.colorbar(cb)
     plt.show()

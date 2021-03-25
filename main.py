@@ -16,23 +16,18 @@ For a description of the UHI methods, refer to Valmassoi and Keller (2021).
 
 
 from uhi_calculation import calc_uhi, quick_uhi_plot
-from netCDF4 import Dataset
 import numpy as np
+import pandas as pd
+import geopandas as gpd
 
-datafile = Dataset('') # file containing the temperature field
-extfile = Dataset('') # file containing the invariant data
-gridfile = Dataset('') # file containing the grid field
+df = pd.read_csv('dataset.csv')
 
-# surface temperature (time, cell) - unstructured grid
-temperature_time_series = datafile.variables['T_2M'][:, :] - 273.15
-lons = gridfile.variables["clon"][:]  # longitude (degrees) 1D
-lats = gridfile.variables["clat"][:]  # latitude (degrees) 1D
-topography = extfile.variables['topography_c'][:]  # topography: 1D
-rural_land_use = extfile.variables['LU_CLASS_FRACTION'][1, :]  # rural land use: 1D
-urban_land_use = extfile.variables['LU_CLASS_FRACTION'][18, :]  # urban use: 1D
-
-# first time-step
-temperature = temperature_time_series[0,:]
+lons = df.lons.values  # longitude (degrees) 1D
+lats = df.lats.values  # latitude (degrees) 1D
+topography = df.topo.values # topography: 1D
+rural_land_use = df.rural.values  # rural land use: 1D
+urban_land_use = df.urban.values  # urban use: 1D
+temperature = df.temperature.values # temperature: 1D
 
 # coordinates for the methods
 min_urb_coord_box = [51.5, 5.8]
@@ -40,18 +35,11 @@ max_urb_coord_box = [52, 6.2]
 min_rur_coord_box = [51, 5]
 max_rur_coord_box = [53, 7]
 
+
+seed = [2315,2316,2317]
 # example 1: UHI field with M7
 method = 7 # method number
-uhi_m7 = calc_uhi(method, temperature, lons, lats, topography, rural_land_use, urban_land_use, min_urb_coord_box,
-                  max_urb_coord_box, min_rur_coord_box, max_rur_coord_box)
-
-# example 2: UHI time series M1
-uhi = np.zeros(temperature_time_series.shape)
-method = 1 # method number
-for i in np.arange(0, uhi.shape[0]):
-    uhi[i] = calc_uhi(method, temperature_time_series[i, :], lons, lats, topography, rural_land_use, urban_land_use,
-                      min_urb_coord_box,
-                      max_urb_coord_box, min_rur_coord_box, max_rur_coord_box, rur_obs=28)
+uhi_m7 = calc_uhi(method, temperature, lons, lats, topography, rural_land_use, urban_land_use, min_urb_coord_box, max_urb_coord_box, min_rur_coord_box, max_rur_coord_box,seed)
 
 # quick plotting routine to check the results
 # coordinate limits
