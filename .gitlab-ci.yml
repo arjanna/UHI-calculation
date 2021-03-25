@@ -8,9 +8,3 @@ test-job1:
   stage: test
   script:
     - python3 test_main.py
-
-
-deploy-prod:
-  stage: deploy
-  script:
-    - echo "commit to $CI_COMMIT_BRANCH branch."
