@@ -22,4 +22,8 @@ A simple plotting routine with Basemap: **quick_uhi_plot**. The _main.py_ gives 
 
 This program is a free software distributed under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 (GNU-GPLv3). You can redistribute and/or modify by citing the mentioned 
+<<<<<<< HEAD
 publication, but WITHOUT ANY WARRANTY; without even the implied warranty of  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+=======
+publication, but WITHOUT ANY WARRANTY; without even the implied warranty of  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711

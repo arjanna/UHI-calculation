@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
 #!/usr/bin/env python3
 """
 This code is used to calculate of the Urban Heat Island effect as described in:
@@ -71,7 +74,11 @@ class UHI:
     URBAN_SEARCH_RADIUS_DEFAULT = 8  # km
     RURAL_SEARCH_RADIUS_DEFAULT = 10  # km
     NEAR_NEIGHBOUR_DEFAULT = 5
+<<<<<<< HEAD
     URBAN_SEEDS_DEFAULT = [0,1,2]  # grid point number
+=======
+    #URBAN_SEEDS_DEFAULT = [0,1,2]  # grid point number
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
     topography = None
 
     """
@@ -114,8 +121,12 @@ class UHI:
         self.urban_area_index = np.where(urban_area_index_mask)[0]
         self.rural_area_index = np.where(np.logical_and(area_extent_index_mask,
                                                         np.logical_not(urban_area_index_mask)))[0]
+<<<<<<< HEAD
         self.topo_urban_mean = np.nanmean(self.topography[np.where(self.topography[self.urban_area_index])[0]])
 
+=======
+        self.topo_urban_mean = np.nanmean(self.topography[self.urban_area_index])
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
     def _choose_uhi(self, method):
         fn = getattr(self, f'uhi{method}', None)
         if fn is None or not callable(fn):
@@ -127,30 +138,50 @@ class UHI:
 
     def uhi1(self, t, baseline):
         print(f'base uhi1 {baseline}')
+<<<<<<< HEAD
         return t - baseline
+=======
+        return t - baseline, baseline
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
 
     def uhi2(self, t, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT):
         ind = np.where(np.logical_and(self.urban_use[self.rural_area_index] < urban_use_threshold,
                                       self.topography[self.rural_area_index] < self.topo_urban_mean))[0]
         rural = self.rural_land_use[self.rural_area_index]
+<<<<<<< HEAD
         print(self.rural_area_index)
+=======
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
         index_max_rural = np.nanmax(rural[ind])
         rur_grid_point = rural[ind].tolist().index(index_max_rural)
         baseline = t[self.rural_area_index[rur_grid_point]]
         print(f'base uhi2 {baseline}')
+<<<<<<< HEAD
         return t - baseline
 
+=======
+        return t - baseline, baseline
+ 
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
     def uhi3(self, t, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT):
         ind = np.where(self.urban_use[self.area_extent_index] < urban_use_threshold)[0]
         baseline = np.nanmean(t[self.area_extent_index[ind]])
         print(f'base uhi3 {baseline}')
+<<<<<<< HEAD
         return t - baseline
+=======
+        return t - baseline, baseline
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
 
     def uhi4(self, t, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT):
         ind = np.where(self.urban_use[self.rural_area_index] < urban_use_threshold)[0]
         baseline = np.nanmean(t[self.rural_area_index[ind]])
         print(f'base uhi4 {baseline}')
+<<<<<<< HEAD
         return t - baseline
+=======
+        return t - baseline, baseline
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
 
     def uhi5(self, t, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT,
              topo_urban_mean_scaling=TOPO_URBAN_MEAN_SCALING_DEFAULT):
@@ -163,7 +194,11 @@ class UHI:
         ))[0]
         baseline = np.nanmean(t[self.rural_area_index[ind]])
         print(f'base uhi5 {baseline}')
+<<<<<<< HEAD
         return t - baseline
+=======
+        return t - baseline, baseline
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
 
     def uhi6(self, t, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT):
         ind = np.where(self.urban_use[self.rural_area_index] < urban_use_threshold)[0]
@@ -171,9 +206,15 @@ class UHI:
                                 for i in np.arange(0, self.topography.shape[0])])
         baseline = np.nanmean(t_correct[self.rural_area_index[ind]])
         print(f'base uhi6 {baseline}')
+<<<<<<< HEAD
         return t_correct - baseline
 
     def uhi7(self, t, seeds=URBAN_SEEDS_DEFAULT, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT,
+=======
+        return t_correct - baseline, baseline
+
+    def uhi7(self, t, seeds, urban_use_threshold=URBAN_USE_THRESHOLD_DEFAULT,
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
              urban_core_threshold=URBAN_CORE_THRESHOLD_DEFAULT, urban_search_radius=URBAN_SEARCH_RADIUS_DEFAULT,
              rural_search_radius=RURAL_SEARCH_RADIUS_DEFAULT, nn=NEAR_NEIGHBOUR_DEFAULT):
         lolarad = np.deg2rad((self.lons, self.lats))
@@ -185,7 +226,10 @@ class UHI:
         indices[:] = -1
         maxdist = 8  # search radius
         new_seeds = np.where([x in seeds for x in np.where(urb)[0]])
+<<<<<<< HEAD
         print(new_seeds)
+=======
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
         indices[0, 0:len(new_seeds[0].tolist())] = new_seeds[0]
         for i in np.arange(0, 25):
             ulolarad_core = ulolarad[:, indices[i, 0:np.sum(indices[i, :] > -1)]]
@@ -209,8 +253,13 @@ class UHI:
             tbase = t_rural[idx[:, 0]]
         baseline = np.mean(tbase[self.rural_area_index])
         print(f'base uhi7 {baseline}')
+<<<<<<< HEAD
         uhi = t - baseline
         return uhi
+=======
+        uhi = t - tbase
+        return uhi, tbase, baseline
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
 
 
 class Parameters:
@@ -238,7 +287,11 @@ class Parameters:
 
 
 def calc_uhi(method, t, lons, lats, topography, rural_land_use, urban_land_use, min_urb_coord_box,
+<<<<<<< HEAD
              max_urb_coord_box, min_rur_coord_box, max_rur_coord_box, rur_obs=None):
+=======
+             max_urb_coord_box, min_rur_coord_box, max_rur_coord_box, additional_info=None):
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
 
     parms = Parameters()
 
@@ -267,8 +320,13 @@ def calc_uhi(method, t, lons, lats, topography, rural_land_use, urban_land_use, 
               area_extent_index_mask=parms.rural_box.get_index_mask(parms.lats, parms.lons),
               urban_area_index_mask=parms.urban_box.get_index_mask(parms.lats, parms.lons))
 
+<<<<<<< HEAD
     if method == 1:
         uhi_all = uhi(method, parms.temperature, rur_obs)
+=======
+    if (method == 1 or method == 7):
+        uhi_all = uhi(method, parms.temperature, additional_info)
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
     else:
         uhi_all = uhi(method, parms.temperature)
     return uhi_all
@@ -291,6 +349,7 @@ def quick_uhi_plot(uhi,  lons, lats, map_limits_min, map_limits_max, levs=np.ara
                 projection='cyl', resolution='c')
     m.drawparallels(par, labels=[1, 0, 0, 0], linewidth=0.0)
     m.drawmeridians(mer, labels=[0, 0, 0, 1], linewidth=0.0)
+<<<<<<< HEAD
     print(np.nanmean(uhi))
     cb = m.contourf(lons, lats, uhi, levs, cmap=plt.cm.jet, tri=True, extend='both', alpha=.8)
     plt.colorbar(cb)
@@ -478,3 +537,8 @@ uhi_m1 = uhi1(temperature, rur_obs)
 #e.g. UHI5
 uhi_m5 = uhi5(temperature)
 >>>>>>> origin/main
+=======
+    cb = m.contourf(lons, lats, uhi, levs, cmap=plt.cm.bwr, tri=True, extend='both', alpha=.8)
+    plt.colorbar(cb)
+    plt.show()
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711

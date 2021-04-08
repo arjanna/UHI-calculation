@@ -1,2 +1,6 @@
 venv
+<<<<<<< HEAD
+=======
+__pycache__
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
 *.patch

@@ -12,10 +12,15 @@ You can redistribute and/or modify by citing the mentioned publication, but WITH
 implied warranty of  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 For a description of the UHI methods, refer to Valmassoi and Keller (2021).
+<<<<<<< HEAD
+=======
+To test the script with the sample data use test_main.py
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
 """
 
 
 from uhi_calculation import calc_uhi, quick_uhi_plot
+<<<<<<< HEAD
 from netCDF4 import Dataset
 import numpy as np
 
@@ -58,3 +63,37 @@ for i in np.arange(0, uhi.shape[0]):
 map_limits_min = [50.5, 5]
 map_limits_max = [54, 7.8]
 quick_uhi_plot(uhi_m7, lons, lats, map_limits_min, map_limits_max)
+=======
+import numpy as np
+import pandas as pd
+import geopandas as gpd
+
+
+
+lons =   # longitude (degrees) 1D
+lats =   # latitude (degrees) 1D
+topography =  # topography: 1D
+rural_land_use =  # rural land use: 1D
+urban_land_use =   # urban use: 1D
+temperature =  # temperature: 1D
+
+# coordinates for the methods
+min_urb_coord_box = [, ] #lat, lon
+max_urb_coord_box = [, ]#lat, lon
+min_rur_coord_box = [, ]#lat, lon
+max_rur_coord_box = [, ]#lat, lon
+
+
+# example 1: UHI field with M7
+method = 7 # method number
+uhi_m7, baseline_temperature = calc_uhi(method, temperature, lons, lats, topography, rural_land_use, urban_land_use, min_urb_coord_box, max_urb_coord_box, min_rur_coord_box, max_rur_coord_box,seed)
+
+
+# quick plotting routine to check the results
+# coordinate limits
+map_limits_min = [min(lats), min(lons)]
+map_limits_max = [max(lats), max(lons)]
+quick_uhi_plot(uhi_m7, lons, lats, map_limits_min, map_limits_max)
+
+
+>>>>>>> 7107fee214edd1ae9a14e2759a251e52c9bb3711
