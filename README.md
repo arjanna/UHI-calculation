@@ -1,8 +1,7 @@
 # UHI-calculation
 This repository contains the code to calculate the Urban Heat Island (UHI) from gridded data as described in
 
-**Valmassoi and Keller (2021), Representing the Urban Heat Island in Gridded Datasets, Advances in Science and Research.
-DOI: TBD**
+**Valmassoi, A. and Keller, J. D.: How to visualize the Urban Heat Island in Gridded Datasets?, Adv. Sci. Res., 18, 41–49, https://doi.org/10.5194/asr-18-41-2021, 2021.**
 
 
 **How to use**:
